@@ -1,3 +1,4 @@
+import { ProfileModule } from './profile/profile.module';
 import { AuthModule } from './auth/auth.module';
 import { Module } from '@nestjs/common';
 import { RegisterModule } from './register/register.module';
@@ -6,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+        ProfileModule, 
     ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.DB_URL),
     RegisterModule,

@@ -19,6 +19,9 @@ export class User {
 
     @Prop([String])
     friends: string[]
+
+    @Prop([String])
+    conferences: string[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

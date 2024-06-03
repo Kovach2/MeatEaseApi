@@ -7,7 +7,11 @@ import { Model } from 'mongoose';
 export class LoginService {
     constructor(@InjectModel(User.name) private userModal: Model<User>) {}
     async findByUsername(username: string){
-        const userExist = await this.userModal.findOne({username: username})
-        return userExist
+        try{
+            const userExist = await this.userModal.findOne({username: username}, {_id: 0})
+            return userExist
+        }catch(error){
+            console.log(error)
+        }
     }
 }
