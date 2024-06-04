@@ -15,6 +15,8 @@ export class RegisterService {
     }
 
     async registerUser(user: IUser){
+        console.log(user)
+
         const newUser : IUser = {
             username: user.username,
             email: user.email,

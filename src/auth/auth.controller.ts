@@ -13,11 +13,11 @@ export class AuthController {
     // @UseGuards(JwtAuthGuard)
     @Post('login')
     async login(@Body() loginUser: IUser) {
-        console.log(loginUser.username, loginUser.password)
           const user = await this.authService.validateUser(loginUser.username, loginUser.password);
           if (!user) {
               throw new UnauthorizedException('Invalid credentials');
           }
-          return this.authService.login(user);
+
+          return await this.authService.login(user);
     }
 }

@@ -18,4 +18,17 @@ export class ProfileController {
     async changeAvatar(@Body() data: {avatar: string, token: string}){
         return this.profileService.changeUserAvatar(data)
     }
+
+    @Post("/change/email")
+    async changeEmail(@Body() data: {token: string, newEmail: string}){
+        const success = this.profileService.changeEmail(data)
+        return {code: 200, success: success, message: "Почта успешно обновлена"}
+    }
+
+    @Post("/change/password")
+    async changePassword(@Body() data: {newPassword: string, token: string}){
+        const success =  this.profileService.changePassword(data)
+        return {code: 200, success: success, message: "Пароль успешно обновлен"}
+    }
+
 }

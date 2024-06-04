@@ -3,6 +3,11 @@ import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
+export interface IFriend{
+    username: string
+    avatar: string
+}
+
 @Schema({versionKey: false})
 export class User {
     @Prop({ unique:true, required: true })
@@ -17,8 +22,8 @@ export class User {
     @Prop()
     avatar: string
 
-    @Prop([String])
-    friends: string[]
+    @Prop({type: [{username: String, avatar: String}], unique:true, _id:false})
+    friends: IFriend[]
 
     @Prop([String])
     conferences: string[]

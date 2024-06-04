@@ -26,7 +26,6 @@ export class AuthService {
     async validateUser(username: string, password: string): Promise<User | null> {
         const user = await this.loginService.findByUsername(username)
         if (user && await this.comparePasswords(password, user.password)) {
-            console.log(user)
           return user;
         }
         return null;
@@ -35,15 +34,17 @@ export class AuthService {
     // Расшифровка токена
     async getUserData(token: string): Promise<User | null>{
         const user : User = await this.jwtService.decode(token)
-        const avatar : string = (await this.loginService.findByUsername(user.username)).avatar
-        user.avatar = avatar
+        const oldUser : User = await this.loginService.findByUsername(user.username)
+        user.avatar = oldUser.avatar
+        user.friends = oldUser.friends
+        user.email = oldUser.email
+        user.conferences = oldUser.conferences
         return user
     }
 
     // Генерация токена
     async login(user: User) {
-        const payload = { username: user.username, email: user.email, avatar: user.avatar, friends: user.friends, 
-            сonferences: user.conferences };
+        const payload = { username: user.username };
         return {
             access_token: this.jwtService.sign(payload),
         };
