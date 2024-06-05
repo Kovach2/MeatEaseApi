@@ -23,7 +23,7 @@ export class RegisterService {
             password: await this.hashPassword(user.password),
             avatar: process.env.DEFAULT_USER_AVATAR,
             friends: [],
-            conferences: []
+            conferences: 0
         }
         const registerUser = await this.userModal.create(newUser)
         return registerUser

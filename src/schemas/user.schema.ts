@@ -25,8 +25,8 @@ export class User {
     @Prop({type: [{username: String, avatar: String}], unique:true, _id:false})
     friends: IFriend[]
 
-    @Prop([String])
-    conferences: string[]
+    @Prop()
+    conferences: number
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

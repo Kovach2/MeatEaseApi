@@ -4,5 +4,5 @@ export interface IUser {
     password: string;
     avatar?: string
     friends?: string[]
-    conferences?: string[]
+    conferences?: number
 }
