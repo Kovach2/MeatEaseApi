@@ -23,8 +23,14 @@ export class ConferenceService {
         private readonly authService: AuthService
     ){}
 
+    private getUser = async({token} : {token: string}) =>{
+      const user : User = await this.authService.getUserData(token)
+      return user
+    }
+
     createConference = async(data: {token: string}) => {
-      const user : User = await this.authService.getUserData(data.token)
+      const { token } = data
+      const user = await this.getUser({token})
       await this.userModal.findOneAndUpdate({username: user.username}, {conferences: user.conferences += 1})
       const roomId = generateRoomId()
 
@@ -35,7 +41,7 @@ export class ConferenceService {
             username: user.username,
             avatar: user.avatar,
             isMicroOn: false,
-            isVideoOn: false
+            isVideoOn: false,
           }
         ],
         chatMessage: []
@@ -48,23 +54,23 @@ export class ConferenceService {
     findConference = async(data: {conferenceId: string}) => {
       const { conferenceId } = data
       const conference : Conference = await this.conferenceModal.findOne({conferenceId: conferenceId})
-      console.log(conference)
       return conference
     }
 
     addUser = async(data: { conferenceId: string, token: string }) => {
-      const user: User = await this.authService.getUserData(data.token);
-      const conference: Conference = await this.findConference({ conferenceId: data.conferenceId });
-      if (user && conference) {
-        const existingUserIndex = conference.users.findIndex(existingUser => existingUser.username === user.username);
+      const { conferenceId, token } = data
+      const user = await this.getUser({token})
+      const existConference: Conference = await this.findConference({ conferenceId: conferenceId });
+      if (user && existConference) {
+        const existingUserIndex = existConference.users.findIndex(existingUser => existingUser.username === user.username);
         if (existingUserIndex === -1) {
           const newUser = { username: user.username, avatar: user.avatar, isMicroOn: false, isVideoOn: false };
-          conference.users.push(newUser);
-          const newConference : Conference = await this.conferenceModal.findOneAndUpdate({conferenceId: conference.conferenceId}, conference, { new: true });
+          existConference.users.push(newUser);
+          await this.conferenceModal.findOneAndUpdate({conferenceId: existConference.conferenceId}, existConference, { new: true });
 
-          return newConference
+          return newUser
         } else {
-          return conference;
+          return existConference;
         }
       } else {
         return null;
@@ -72,11 +78,35 @@ export class ConferenceService {
     }
 
     removeUser = async(data: { conferenceId: string, token: string }) =>{
-      const user: User = await this.authService.getUserData(data.token)
-      const conference: Conference = await this.findConference({ conferenceId: data.conferenceId })
-      const users = conference.users.filter(existingUser => existingUser.username !== user.username);
-      const newConference = await this.conferenceModal.findOneAndUpdate({conferenceId: data.conferenceId}, {users: users})
-      return newConference
+      try{
+        const { conferenceId, token } = data
+        const user = await this.getUser({token})
+        const conference: Conference = await this.findConference({ conferenceId: conferenceId})
+
+        const users = conference.users.filter(existingUser => existingUser.username !== user.username);
+        const newConference = await this.conferenceModal.findOneAndUpdate({conferenceId: conferenceId}, {users: users})
+        return newConference
+      }catch(e){
+        console.log(e)
+      }
+
+    }
+
+    updateUserState = async (data: { conferenceId: string, token: string, micOn: boolean, camOn: boolean }) => {
+      const { conferenceId, token, micOn, camOn } = data;
+
+      const user = await this.getUser({token});
+
+      const existConference = await this.conferenceModal.findOne({ conferenceId });
+      if(existConference){
+        const currentUser = existConference.users.find(u => u.username === user.username);
+        if (currentUser) {
+          currentUser.isMicroOn = micOn;
+          currentUser.isVideoOn = camOn;
+        }
+        const conference = await existConference.save();
+        return conference;
+      }
     }
 }
 

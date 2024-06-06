@@ -9,6 +9,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginService } from 'src/login/login.service';
 
+
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: User.name, schema: UserSchema }, {name: Conference.name, schema:ConferenceSchema}]),
@@ -16,4 +17,6 @@ import { LoginService } from 'src/login/login.service';
     controllers: [ConferenceController],
     providers: [ConferenceService, VideoGateway, AuthService, JwtService, LoginService],
 })
-export class ConferenceModule {}
+export class ConferenceModule{
+
+}

@@ -11,12 +11,25 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: WebSocket) {
+
+  private clientsData = new Map<WebSocket, { token: string, conferenceId: string }>();
+
+  handleConnection(client: WebSocket, req: Request) {
     console.log('Client connected');
+    const { token, conferenceId } = this.extractParamsFromURL(req.url);
+    if (token && conferenceId) {
+      this.clientsData.set(client, { token, conferenceId });
+    }
   }
 
-  handleDisconnect(client: WebSocket) {
+  async handleDisconnect(client: WebSocket) {
     console.log('Client disconnected');
+    const { token, conferenceId } = this.getClientData(client);
+    if (token && conferenceId) {
+        await this.removeUserAndUpdateConference(conferenceId, token);
+    } else {
+        this.sendUpdateFailureMessage(client);
+    }
   }
 
   @SubscribeMessage('joinConference')
@@ -25,10 +38,10 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: WebSocket
   ): Promise<void> {
     const { token, conferenceId } = data;
-    await this.conferenceService.addUser({ conferenceId: conferenceId, token: token })
+    const newUser = await this.conferenceService.addUser({ conferenceId: conferenceId, token: token })
     const conference: Conference = await this.conferenceService.findConference({ conferenceId });
     if (conference && token) {
-      client.send(JSON.stringify({ event: 'joinConference', success: true, conference }));
+      client.send(JSON.stringify({ event: 'joinConference', success: true, conference, newUser }));
       this.broadcastToAllClients({ event: 'updateConference', success: true, conference });
     } else {
       client.send(JSON.stringify({ event: 'joinConference', success: false, message: 'Conference not found' }));
@@ -51,15 +64,27 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("disconnectConference")
   async handledisconnetConference(
-    @MessageBody() data: { token: string; conferenceId: string },
-    @ConnectedSocket() client: WebSocket
+      @MessageBody() data: { token: string; conferenceId: string },
+      @ConnectedSocket() client: WebSocket
   ): Promise<void> {
-    const { token, conferenceId } = data;
-    if(token && conferenceId){
-      const newConference = await this.conferenceService.removeUser({ conferenceId: conferenceId, token: token })
-      this.broadcastToAllClients({ event: 'updateConference', success: true, newConference });
+      const { token, conferenceId } = data;
+      if (token && conferenceId) {
+          await this.removeUserAndUpdateConference(conferenceId, token);
+      } else {
+          this.sendUpdateFailureMessage(client);
+      }
+  }
+
+  @SubscribeMessage("updateUserState")
+  async hanndleUpdateUserStaer(
+      @MessageBody() data: { token: string; conferenceId: string, micOn: boolean, camOn: boolean },
+      @ConnectedSocket() client: WebSocket
+  ): Promise<void> {
+    const {token, conferenceId, micOn, camOn} = data
+    if (token && conferenceId) {
+      await this.updateUserData(token, conferenceId, micOn, camOn);
     } else {
-      client.send(JSON.stringify({ event: 'updateConference', success: false, message: 'Conference not found' }));
+        this.sendUpdateFailureMessage(client);
     }
   }
 
@@ -72,4 +97,40 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  private async updateUserData(token: string, conferenceId: string, micOn: boolean, camOn: boolean){
+    const conference = await this.conferenceService.updateUserState({conferenceId, token, micOn, camOn})
+    this.broadcastToAllClients({ event: 'updateConference', success: true, conference });
+  }
+
+  private async removeUserAndUpdateConference(conferenceId: string, token: string) {
+    const conference = await this.conferenceService.removeUser({ conferenceId, token });
+    this.broadcastToAllClients({ event: 'updateConference', success: true, conference });
+    this.removeClientFromData(token, conferenceId);
+  }
+
+  private removeClientFromData(token: string, conferenceId: string) {
+    this.clientsData.forEach((value, client) => {
+        if (value.token === token && value.conferenceId === conferenceId) {
+            this.clientsData.delete(client);
+        }
+    });
+  }
+
+  private sendUpdateFailureMessage(client: WebSocket) {
+    client.send(JSON.stringify({ event: 'updateConference', success: false, message: 'Conference not found' }));
+  }
+
+  private extractParamsFromURL(url: string) {
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    const token = urlParams.get('token');
+    const conferenceId = urlParams.get('conferenceId');
+    return { token, conferenceId };
+  }
+
+  private getClientData(client: WebSocket): { token: string, conferenceId: string } {
+    const clientData = this.clientsData.get(client);
+    return clientData || { token: '', conferenceId: '' };
+  }
+  
 }
