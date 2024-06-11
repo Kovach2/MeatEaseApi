@@ -5,4 +5,5 @@ export interface IUser {
     avatar?: string
     friends?: string[]
     conferences?: number
+    isAdmin: boolean
 }

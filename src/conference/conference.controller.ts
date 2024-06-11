@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ConferenceService } from './conference.service';
 
 @Controller("/conference")
@@ -36,6 +36,36 @@ export class ConferenceController {
                 }
             }
         } catch (error) {
+            console.log(error)
+            throw new Error(error);
+        }
+    }
+
+    @Get("/allConference")
+    async getAllConferences(){
+        try {
+            const conferences = await this.conferenceService.getAllConferences()
+            if(conferences){
+                return {code: 200, success: true, conferences}
+            }else{
+                return {code: 400, success: false, conferences}
+            }
+        }catch (error) {
+            console.log(error)
+            throw new Error(error);
+        }
+    }
+
+    @Post("/delConference")
+    async delConference(@Body() data: {conferenceId: string}){
+        try {
+            const success = await this.conferenceService.delConference(data)
+            if(success){
+                return {code: 200, success: success, message: "Конференция успешно удалена"}
+            }else{
+                return {code: 400, success: success, message: "Не удалось удалить конференцию"}
+            }
+        }catch (error) {
             console.log(error)
             throw new Error(error);
         }

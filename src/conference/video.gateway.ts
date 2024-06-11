@@ -34,15 +34,16 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('joinConference')
   async handleJoinConference(
-    @MessageBody() data: { token: string; conferenceId: string },
+    @MessageBody() data: { userId: string, token: string; conferenceId: string },
     @ConnectedSocket() client: WebSocket
   ): Promise<void> {
-    const { token, conferenceId } = data;
-    const newUser = await this.conferenceService.addUser({ conferenceId: conferenceId, token: token })
+    const { userId, token, conferenceId } = data;
+    console.log(data)
+    const newUser = await this.conferenceService.addUser({ userId: userId, conferenceId: conferenceId, token: token })
     const conference: Conference = await this.conferenceService.findConference({ conferenceId });
     if (conference && token) {
-      client.send(JSON.stringify({ event: 'joinConference', success: true, conference, newUser }));
-      this.broadcastToAllClients({ event: 'updateConference', success: true, conference });
+      client.send(JSON.stringify({ event: 'joinConference', success: true, conference }));
+      this.broadcastToAllClients({ event: 'userJoinToConference', success: true, newUser });
     } else {
       client.send(JSON.stringify({ event: 'joinConference', success: false, message: 'Conference not found' }));
     }

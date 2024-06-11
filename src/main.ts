@@ -7,7 +7,7 @@ async function bootstrap() {
   app.useWebSocketAdapter(new WsAdapter(app)) // Add this line
   app.setGlobalPrefix("api")
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })

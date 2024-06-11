@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { ProfileService } from './profile.service';
 
@@ -29,6 +29,25 @@ export class ProfileController {
     async changePassword(@Body() data: {newPassword: string, token: string}){
         const success =  this.profileService.changePassword(data)
         return {code: 200, success: success, message: "Пароль успешно обновлен"}
+    }
+
+    @Get("/allUsers")
+    async getAllUsers(){
+        const users =  await this.profileService.getAllUsers()
+        return {code: 200, success: true, users}
+    }
+
+    @Post("/delUser")
+    async delUser(@Body() data: {username: string}){
+        const success =  this.profileService.delUser(data)
+        return {code: 200, success: success, message: "Пользователь успешно удален"}
+    }
+
+    
+    @Post("/changeUser")
+    async changeUser(@Body() data: {username: string, email: string, conferences: string, isAdmin: boolean}){
+        const success =  this.profileService.changeUser(data)
+        return {code: 200, success: success, message: "Пользователь успешно изменен"}
     }
 
 }

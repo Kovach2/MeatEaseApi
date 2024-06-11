@@ -36,15 +36,7 @@ export class ConferenceService {
 
       const conferenceData : Conference = {
         conferenceId: roomId,
-        users: [
-          {
-            username: user.username,
-            avatar: user.avatar,
-            isMicroOn: false,
-            isVideoOn: false,
-          }
-        ],
-        chatMessage: []
+        users: [],
       }
 
       const newConference : Conference = await this.conferenceModal.create(conferenceData)
@@ -57,14 +49,20 @@ export class ConferenceService {
       return conference
     }
 
-    addUser = async(data: { conferenceId: string, token: string }) => {
-      const { conferenceId, token } = data
+    addUser = async(data: { userId: string, conferenceId: string, token: string }) => {
+      const { userId, conferenceId, token } = data
       const user = await this.getUser({token})
       const existConference: Conference = await this.findConference({ conferenceId: conferenceId });
       if (user && existConference) {
         const existingUserIndex = existConference.users.findIndex(existingUser => existingUser.username === user.username);
         if (existingUserIndex === -1) {
-          const newUser = { username: user.username, avatar: user.avatar, isMicroOn: false, isVideoOn: false };
+          const newUser = { 
+            userId: userId,
+            username: user.username,
+            avatar: user.avatar, 
+            isMicroOn: false, 
+            isVideoOn: false 
+          };
           existConference.users.push(newUser);
           await this.conferenceModal.findOneAndUpdate({conferenceId: existConference.conferenceId}, existConference, { new: true });
 
@@ -107,6 +105,22 @@ export class ConferenceService {
         const conference = await existConference.save();
         return conference;
       }
+    }
+
+    getAllConferences = async() =>{
+      const conferences = await this.conferenceModal.find({},{chatMessage: 0})
+      return conferences
+    }
+
+    delConference = async(props: {conferenceId: string}) =>{
+      const { conferenceId } = props
+      try{
+        await this.conferenceModal.findOneAndDelete({conferenceId: conferenceId})
+        return true
+      }catch{
+        return false
+      }
+
     }
 }
 

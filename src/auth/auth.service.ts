@@ -39,6 +39,7 @@ export class AuthService {
         user.friends = oldUser.friends
         user.email = oldUser.email
         user.conferences = oldUser.conferences
+        user.isAdmin = oldUser.isAdmin
         return user
     }
 

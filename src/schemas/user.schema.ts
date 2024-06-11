@@ -27,6 +27,9 @@ export class User {
 
     @Prop()
     conferences: number
+
+    @Prop()
+    isAdmin: boolean
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

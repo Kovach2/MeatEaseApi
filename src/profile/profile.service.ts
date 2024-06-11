@@ -53,4 +53,31 @@ export class ProfileService {
             return false;
         }
     }
+
+    getAllUsers = async() =>{
+        const users = await this.userModal.find({},{_id: 0, password: 0, avatar: 0, friends: 0})
+        return users
+    }
+
+    delUser = async(props : { username: string }) => {
+        try{
+            const { username } = props
+            await this.userModal.findOneAndDelete({username: username})
+            return true
+        }catch(e){
+            console.log(e)
+            return false
+        }
+    }
+
+    changeUser = async(props : { username: string, email: string, conferences: string, isAdmin: boolean }) => {
+        try{
+            const { username, email ,conferences , isAdmin } = props
+            await this.userModal.findOneAndUpdate({username: username}, {username:username, email: email, conferences:conferences, isAdmin: isAdmin})
+            return true
+        }catch(e){
+            console.log(e)
+            return false
+        }
+    }
 }
